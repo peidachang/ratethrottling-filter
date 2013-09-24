@@ -24,17 +24,12 @@ public class RateLimitFilter implements Filter {
             .getName());
 
     private CacheManager mgr;
-    private ThreadLocal<Cache> cacheThreadLocal;
+    private Cache cache;
 
     public void init(FilterConfig filterConfig) throws ServletException {
         InputStream resourceAsStream = getClass().getResourceAsStream("/ehcache.xml");
         mgr = new CacheManager(resourceAsStream);
-        cacheThreadLocal = new ThreadLocal<Cache>() {
-            @Override
-            protected Cache initialValue() {
-                return mgr.getCache(("rateLimit"));
-            }
-        };
+        cache = mgr.getCache("rateLimit");
         try {
             resourceAsStream.close();
         } catch (IOException e) {
@@ -48,10 +43,10 @@ public class RateLimitFilter implements Filter {
         System.out.println("path: " + path);
         if (!exempt(path)) {
             String key = new StringBuilder(remoteAddr).append(":").append(path).toString();
-            Element element = cacheThreadLocal.get().get(key);
+            Element element = cache.get(key);
             if (element == null) {
                 element = new Element(key, new ConnectionBag(path));
-                cacheThreadLocal.get().put(element);
+                cache.put(element);
                 filterChain.doFilter(req, resp);
             } else {
                 ConnectionBag bag = (ConnectionBag) element.getObjectValue();
@@ -70,8 +65,8 @@ public class RateLimitFilter implements Filter {
 
     private boolean exempt(String path) {
 //        exempt some paths
-        return !(path.startsWith("/1.1/") || path.startsWith("/1/") || path.contains("/statuses/"));
-//        return false;
+//        return !(path.startsWith("/1.1/") || path.startsWith("/1/") || path.contains("/statuses/"));
+        return false;
     }
 
     public void destroy() {
