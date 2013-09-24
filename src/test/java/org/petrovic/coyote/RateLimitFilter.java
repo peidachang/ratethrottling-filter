@@ -18,15 +18,17 @@ import java.net.HttpURLConnection;
 import java.util.Date;
 import java.util.logging.Logger;
 
+
 public class RateLimitFilter implements Filter {
+
     @SuppressWarnings("unused")
     private static final Logger log = Logger.getLogger(RateLimitFilter.class
             .getName());
 
-    private CacheManager mgr;
-    private Cache cache;
+    private final CacheManager mgr;
+    private final Cache cache;
 
-    public void init(FilterConfig filterConfig) throws ServletException {
+    public RateLimitFilter() {
         InputStream resourceAsStream = getClass().getResourceAsStream("/ehcache.xml");
         mgr = new CacheManager(resourceAsStream);
         cache = mgr.getCache("rateLimit");
@@ -34,6 +36,9 @@ public class RateLimitFilter implements Filter {
             resourceAsStream.close();
         } catch (IOException e) {
         }
+    }
+
+    public void init(FilterConfig filterConfig) throws ServletException {
     }
 
     public void doFilter(ServletRequest req, ServletResponse resp, FilterChain filterChain)
