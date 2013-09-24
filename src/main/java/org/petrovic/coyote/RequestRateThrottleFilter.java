@@ -13,7 +13,7 @@
  * @author Jeff Williams <a href="http://www.aspectsecurity.com">Aspect Security</a>
  * @created 2007
  */
-package org.petrovic.rlf;
+package org.petrovic.coyote;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -22,6 +22,7 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Date;
@@ -55,6 +56,7 @@ public class RequestRateThrottleFilter implements Filter {
      *
      * @param filterConfig configuration object
      */
+    @Override
     public void init(FilterConfig filterConfig) {
         hits = Integer.parseInt(filterConfig.getInitParameter(HITS));
         period = Integer.parseInt(filterConfig.getInitParameter(PERIOD));
@@ -74,8 +76,16 @@ public class RequestRateThrottleFilter implements Filter {
      * @throws IOException
      * @throws ServletException
      */
+    @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
+        HttpServletResponse httpServletResponse = (HttpServletResponse) response;
+        String requestURI = httpRequest.getRequestURI();
+        System.out.println("throttling filter says uri: " + requestURI);
+
+        if (pathExempt(requestURI)) {
+            chain.doFilter(request, response);
+        }
 
         String remoteHost = httpRequest.getRemoteHost();
         Stack times = stackMap.get(remoteHost);
@@ -91,8 +101,8 @@ public class RequestRateThrottleFilter implements Filter {
         Date newest = (Date) times.get(times.size() - 1);
         Date oldest = (Date) times.get(0);
         long elapsed = newest.getTime() - oldest.getTime();
-        if (elapsed < period * 1000) // seconds
-        {
+        if (elapsed < period * 1000) {
+            httpServletResponse.setStatus(410);
             response.getWriter().println("Request rate too high");
             return;
         }
@@ -106,8 +116,13 @@ public class RequestRateThrottleFilter implements Filter {
      * passed. After the web container calls this method, it will not call the
      * doFilter method again on this instance of the filter.
      */
+    @Override
     public void destroy() {
         // finalize
+    }
+
+    private boolean pathExempt(String requestURI) {
+        return false;
     }
 
 }

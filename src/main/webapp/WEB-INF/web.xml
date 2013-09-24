@@ -22,7 +22,15 @@
         <filter-name>MyFilter</filter-name>
         <filter-class>org.petrovic.coyote.VersionFilter</filter-class>
     </filter>
+    <filter>
+        <filter-name>throttler</filter-name>
+        <filter-class>org.petrovic.coyote.RequestRateThrottleFilter</filter-class>
+    </filter>
 
+    <filter-mapping>
+        <filter-name>throttler</filter-name>
+        <servlet-name>MyServlet</servlet-name>
+    </filter-mapping>
     <filter-mapping>
         <filter-name>MyFilter</filter-name>
         <servlet-name>MyServlet</servlet-name>
