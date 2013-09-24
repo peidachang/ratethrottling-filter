@@ -8,11 +8,9 @@ import java.io.IOException;
 
 public class MyServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-
     }
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-
         response.getWriter().println("Hello there");
     }
 }

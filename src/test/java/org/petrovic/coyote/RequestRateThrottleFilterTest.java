@@ -7,8 +7,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.servlet.Filter;
-import javax.servlet.Servlet;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -22,15 +20,22 @@ public class RequestRateThrottleFilterTest {
     @Before
     public void setUp() throws Exception {
         ServletConfiguration.Builder servletConfigBuilder = new ServletConfiguration.Builder();
-        servletConfigBuilder.withServletClass((Class<? extends Servlet>) MyServlet.class).withPathSpec("/*");
+        servletConfigBuilder.withServletClass(MyServlet.class).withPathSpec("/*");
+        ServletConfiguration servletConfiguration = servletConfigBuilder.build();
 
-        FilterWrapper.Builder filterBuilder = new FilterWrapper.Builder();
-        filterBuilder.withFilterClass((Class<? extends Filter>) RequestRateThrottleFilter.class).withPathSpec("/*")
+        FilterWrapper.Builder filter1Builder = new FilterWrapper.Builder();
+        filter1Builder.withFilterClass(RequestRateThrottleFilter.class).withPathSpec("/filter1")
                 .withInitParameter("hits", "4")
                 .withInitParameter("period", "30");
 
-        server = new FeatherCon.Builder().withServletConfiguration(servletConfigBuilder.build())
-                .withFilter(filterBuilder.build()).build();
+        FilterWrapper.Builder filter2Builder = new FilterWrapper.Builder();
+        filter2Builder.withFilterClass(RateLimitFilter.class).withPathSpec("/filter2");
+
+        server = new FeatherCon.Builder()
+                .withServletConfiguration(servletConfiguration)
+                .withFilter(filter1Builder.build())
+                .withFilter(filter2Builder.build())
+                .build();
 
         server.start();
     }
@@ -47,13 +52,14 @@ public class RequestRateThrottleFilterTest {
 
     @Test
     public void testDoFilter() throws Exception {
-        System.out.println("test do filter");
+        System.out.println("test do filter. waiting...");
+        while (true) ;
     }
 
-    @Test
-    public void testDoGet() throws Exception {
+    //    @Test
+    public void testDoGetFilter1() throws Exception {
         while (true) {
-            URL url = new URL("http://localhost:8080/whatever");
+            URL url = new URL("http://localhost:8080/filter1");
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             int responseCode = connection.getResponseCode();
             if (responseCode == 200) {
@@ -63,11 +69,32 @@ public class RequestRateThrottleFilterTest {
                 while ((inputLine = in.readLine()) != null)
                     System.out.println(inputLine);
                 in.close();
+                Thread.sleep(3000);
             } else {
                 System.out.println("got " + responseCode + ", sleeping...");
                 Thread.sleep(31000);
             }
-            Thread.sleep(3000);
+        }
+    }
+
+    //    @Test
+    public void testDoGetFilter2() throws Exception {
+        while (true) {
+            URL url = new URL("http://localhost:8080/filter2");
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            int responseCode = connection.getResponseCode();
+            if (responseCode == 200) {
+                InputStream inputStream = connection.getInputStream();
+                BufferedReader in = new BufferedReader(new InputStreamReader(inputStream));
+                String inputLine;
+                while ((inputLine = in.readLine()) != null)
+                    System.out.println(inputLine);
+                in.close();
+                Thread.sleep(3000);
+            } else {
+                System.out.println("got " + responseCode + ", sleeping...");
+                Thread.sleep(31000);
+            }
         }
     }
 }
