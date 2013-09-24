@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="2.5" xmlns="http://java.sun.com/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
+
+    <context-param>
+        <param-name>version</param-name>
+        <param-value>SuperTweet.net-API/2.1.3</param-value>
+    </context-param>
+
+    <servlet>
+        <servlet-name>MyServlet</servlet-name>
+        <servlet-class>org.petrovic.coyote.MyServlet</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>MyServlet</servlet-name>
+        <url-pattern>/*</url-pattern>
+    </servlet-mapping>
+
+    <filter>
+        <filter-name>MyFilter</filter-name>
+        <filter-class>org.petrovic.coyote.VersionFilter</filter-class>
+    </filter>
+
+    <filter-mapping>
+        <filter-name>MyFilter</filter-name>
+        <servlet-name>MyServlet</servlet-name>
+    </filter-mapping>
+</web-app>
